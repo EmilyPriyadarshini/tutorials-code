@@ -48,8 +48,8 @@ contract Borda is IBorda{
 
 
     // backdoor
-    function iAmTheWinner() external   {
-         _winner = msg.sender; 
-    }
+    // function iAmTheWinner() external   {
+        //  _winner = msg.sender; 
+    // }
 
 }
