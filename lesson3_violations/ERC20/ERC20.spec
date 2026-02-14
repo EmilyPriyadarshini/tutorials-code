@@ -23,9 +23,9 @@ rule integrityOfTransferFrom(address sender, address recipient, uint256 amount) 
     uint256 allowanceAfter = allowance(sender, e.msg.sender);
     
     assert (
-        allowanceBefore > allowanceAfter
+        allowanceBefore >= allowanceAfter
         ),
-        "allowance must decrease after using the allowance to pay on behalf of somebody else";
+        "allowance must not increase after using the allowance to pay on behalf of somebody else";
 }
 
 /*
@@ -75,7 +75,7 @@ rule doesNotAffectAThirdPartyBalance(method f) {
     address to;
     address thirdParty;
 
-    require (thirdParty != from) && (thirdParty != to);
+    require (thirdParty != from) && (thirdParty != to) && (thirdParty != e.msg.sender);
 
     uint256 thirdBalanceBefore = balanceOf(thirdParty);
     callFunctionWithParams(e, f, from, to);
@@ -105,7 +105,8 @@ rule balanceChangesFromCertainFunctions(method f, address user){
         (
             f.selector == sig:transfer(address, uint256).selector ||
             f.selector == sig:mint(address, uint256).selector ||
-            f.selector == sig:burn(address, uint256).selector)
+            f.selector == sig:burn(address, uint256).selector ||
+            f.selector == sig:transferFrom(address, address, uint256).selector)
         ),
         "user's balance changed as a result function other than transfer(), transferFrom(), mint() or burn()";
 }
@@ -117,5 +118,5 @@ rule onlyOwnersMayChangeTotalSupply(method f) {
     calldataarg args;
     f(e,args);
     uint256 totalSupplyAfter = totalSupply();
-    assert e.msg.sender == _owner() => totalSupplyAfter != totalSupplyBefore;
+    assert totalSupplyAfter != totalSupplyBefore => e.msg.sender == _owner();
 }
